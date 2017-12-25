@@ -1,0 +1,105 @@
+
+# coding: utf-8
+
+# In[11]:
+
+import pandas as pd
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+
+
+names =[
+    't',                                  # Time (secs)
+    'q1', 'q2', 'q3',                     # Joint angle   (rads)
+    'dq1', 'dq2', 'dq3',                  # Joint velocity (rads/sec)
+    'I1', 'I2', 'I3',                     # Motor current (A)
+    'eps21', 'eps22', 'eps31', 'eps32',   # Strain gauge measurements ($\mu$m /m )
+    'ddq1', 'ddq2', 'ddq3'                # Joint accelerations (rad/sec^2)
+]
+
+df = pd.read_csv('https://raw.githubusercontent.com/sdrangan/introml/2801f72d7a4fff0633ede56ba701984f9bb05652/mult_lin_reg/exp1.csv',
+                 header=None,delim_whitespace=False,names=names,na_values=float)
+df.head(6)
+
+
+
+# In[12]:
+
+df.index
+
+
+# In[13]:
+
+t = np.array(df['t'])
+y = np.array(df['I2'])
+
+plt.plot(t,y,'o')
+plt.xlabel('time')
+plt.ylabel('current into the second joint')
+plt.grid(True)
+plt.show()
+
+
+# In[14]:
+
+xtrain=df[['q2','dq2','eps21', 'eps22', 'eps31', 'eps32','ddq2']]
+ytrain = df['I2']
+
+from sklearn import linear_model
+
+regr = linear_model.LinearRegression()
+regr.fit(xtrain,ytrain)
+
+
+# In[15]:
+
+regr.coef_
+
+
+# In[16]:
+
+y_tr_pred = regr.predict(xtrain)
+
+plt.plot(df.index, ytrain)
+plt.plot(df.index, y_tr_pred)
+plt.xlabel('time')
+plt.ylabel('I2')
+plt.legend(['actual', 'predicted'])
+plt.grid()
+plt.show()
+
+
+# In[17]:
+
+RSS_train = np.mean((y_tr_pred-ytrain)**2)/(np.std(ytrain)**2)
+print("Normalized RSS of the train sample = {0:f}".format(RSS_train))
+
+
+# In[18]:
+
+df2 = pd.read_csv('https://raw.githubusercontent.com/sdrangan/introml/2801f72d7a4fff0633ede56ba701984f9bb05652/mult_lin_reg/exp2.csv',
+                 header=None,delim_whitespace=False,names=names,na_values=float)
+df2.index
+
+
+# In[19]:
+
+xtest=df2[['q2','dq2','eps21', 'eps22', 'eps31', 'eps32','ddq2']]
+ytest=df2['I2']
+y_te_pred = regr.predict(xtest)
+
+plt.plot(df2.index, ytest)
+plt.plot(df2.index, y_te_pred)
+plt.xlabel('time')
+plt.ylabel('I2')
+plt.legend(['actual', 'predicted'])
+plt.grid()
+plt.show()
+
+
+# In[20]:
+
+RSS_test = np.mean((y_te_pred-ytest)**2)/(np.std(ytest)**2)
+print("Normalized RSS of the test sample = {0:f}".format(RSS_test))
+
